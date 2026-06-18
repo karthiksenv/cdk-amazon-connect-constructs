@@ -1,0 +1,12 @@
+coverage/
+cdk.out/
+dist/
+examples/
+test/
+work/
+outputs/
+*.tsbuildinfo
+jest.config.js
+tsconfig.json
+tsconfig.test.json
+.projenrc.ts

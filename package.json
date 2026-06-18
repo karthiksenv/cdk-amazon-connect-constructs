@@ -1,0 +1,71 @@
+{
+  "name": "cdk-amazon-connect-constructs",
+  "version": "0.1.0-alpha.0",
+  "description": "L2-style AWS CDK constructs for Amazon Connect.",
+  "license": "MIT",
+  "author": {
+    "name": "Karth"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/karthiksenv/cdk-amazon-connect-constructs.git"
+  },
+  "keywords": [
+    "aws",
+    "aws-cdk",
+    "amazon-connect",
+    "connect",
+    "constructs",
+    "jsii"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "cdk:synth:example": "cdk synth --app \"ts-node --project tsconfig.test.json examples/lambda-backed-flow.ts\"",
+    "test": "jest --passWithNoTests",
+    "jsii": "jsii --tsconfig tsconfig.jsii.json --validate-tsconfig minimal",
+    "package": "jsii-pacmak",
+    "projen": "projen",
+    "synth": "projen"
+  },
+  "peerDependencies": {
+    "aws-cdk-lib": "^2.260.0",
+    "constructs": "^10.6.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "aws-cdk": "2.1128.0",
+    "aws-cdk-lib": "2.260.0",
+    "constructs": "10.6.0",
+    "jest": "^30.4.2",
+    "jsii": "^5.4.14",
+    "jsii-pacmak": "^1.99.0",
+    "projen": "^0.99.76",
+    "ts-node": "^10.9.2",
+    "ts-jest": "^29.4.11",
+    "typescript": "^5.5.4"
+  },
+  "jsii": {
+    "outdir": "dist",
+    "targets": {
+      "python": {
+        "distName": "cdk-amazon-connect-constructs",
+        "module": "cdk_amazon_connect_constructs"
+      },
+      "java": {
+        "package": "io.github.karthik.cdk.connect",
+        "maven": {
+          "groupId": "io.github.karthik",
+          "artifactId": "cdk-amazon-connect-constructs"
+        }
+      }
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "overrides": {
+    "js-yaml": "4.2.0"
+  }
+}
