@@ -26,6 +26,8 @@
     "test": "jest --passWithNoTests",
     "jsii": "jsii --tsconfig tsconfig.jsii.json --validate-tsconfig minimal",
     "package": "jsii-pacmak",
+    "package:java": "jsii-pacmak -t java --code-only --outdir dist --force && node scripts/patch-java-pom.js",
+    "patch:java-pom": "node scripts/patch-java-pom.js",
     "projen": "projen",
     "synth": "projen"
   },
