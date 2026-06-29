@@ -29,6 +29,13 @@ export class LambdaIntegration extends Construct {
   public constructor(scope: Construct, id: string, props: LambdaIntegrationProps) {
     super(scope, id);
 
+    if (!props.instance) {
+      throw new Error('instance is required.');
+    }
+    if (!props.function) {
+      throw new Error('function is required.');
+    }
+
     this.association = new connect.CfnIntegrationAssociation(this, 'Resource', {
       instanceId: props.instance.instanceId,
       integrationArn: props.function.functionArn,

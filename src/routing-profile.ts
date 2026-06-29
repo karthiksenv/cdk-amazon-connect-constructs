@@ -139,6 +139,13 @@ export class RoutingProfile extends Construct implements IRoutingProfile {
       { queue: props.defaultOutboundQueue, channel: Channel.VOICE, priority: 1, delay: 0 },
     ];
 
+    if (mediaConcurrencies.length === 0) {
+      throw new Error('mediaConcurrencies must include at least one channel.');
+    }
+    if (queueConfigs.length === 0) {
+      throw new Error('queueConfigs must include at least one queue association.');
+    }
+
     this.resource = new connect.CfnRoutingProfile(this, 'Resource', {
       defaultOutboundQueueArn: props.defaultOutboundQueue.queueArn,
       description: props.description,
