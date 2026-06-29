@@ -58,7 +58,7 @@
       "java": {
         "package": "io.github.karthik.cdk.connect",
         "maven": {
-          "groupId": "io.github.karthik",
+          "groupId": "io.github.karthiksenv",
           "artifactId": "cdk-amazon-connect-constructs"
         }
       }

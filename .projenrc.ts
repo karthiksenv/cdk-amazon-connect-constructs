@@ -18,7 +18,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
   },
   publishToMaven: {
     javaPackage: 'io.github.karthik.cdk.connect',
-    mavenGroupId: 'io.github.karthik',
+    mavenGroupId: 'io.github.karthiksenv',
     mavenArtifactId: 'cdk-amazon-connect-constructs',
   },
 });
