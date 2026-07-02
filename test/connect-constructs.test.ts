@@ -111,6 +111,45 @@ describe('ConnectInstance', () => {
     expect(instance.instanceArn).toBe('arn:aws:connect:us-east-1:123456789012:instance/abc123');
     expect(instance.instanceId).toBe('abc123');
   });
+
+  test('falls back to the full ARN when an imported ARN has no resource name', () => {
+    const stack = new Stack();
+
+    const instance = ConnectInstance.fromInstanceArn(
+      stack,
+      'ImportedInstance',
+      'arn:aws:connect:us-east-1:123456789012:instance',
+    );
+
+    expect(instance.instanceId).toBe('arn:aws:connect:us-east-1:123456789012:instance');
+  });
+
+  test('passes explicit attributes through to CfnInstance', () => {
+    const stack = new Stack();
+
+    new ConnectInstance(stack, 'Instance', {
+      instanceAlias: 'support',
+      attributes: {
+        inboundCalls: false,
+        outboundCalls: false,
+        contactflowLogs: true,
+        contactLens: true,
+        earlyMedia: true,
+        useCustomTtsVoices: true,
+      },
+    });
+
+    Template.fromStack(stack).hasResourceProperties('AWS::Connect::Instance', {
+      Attributes: {
+        InboundCalls: false,
+        OutboundCalls: false,
+        ContactflowLogs: true,
+        ContactLens: true,
+        EarlyMedia: true,
+        UseCustomTTSVoices: true,
+      },
+    });
+  });
 });
 
 describe('HoursOfOperation', () => {
@@ -224,6 +263,24 @@ describe('HoursOfOperation', () => {
     })).toThrow(/startTime\.minutes/);
   });
 
+  test('rejects invalid endTime values', () => {
+    const stack = new Stack();
+    const instance = createInstance(stack);
+
+    expect(() => new HoursOfOperation(stack, 'Hours', {
+      instance,
+      name: 'Bad hours',
+      timeZone: 'America/New_York',
+      config: [
+        {
+          day: DayOfWeek.MONDAY,
+          startTime: { hours: 9 },
+          endTime: { hours: 17, minutes: 30.5 },
+        },
+      ],
+    })).toThrow(/endTime\.minutes/);
+  });
+
   test('imports existing hours of operation by ARN', () => {
     const stack = new Stack();
 
@@ -310,6 +367,23 @@ describe('Queue', () => {
     })).toThrow(/maxContacts/);
   });
 
+  test('allows maxContacts of zero', () => {
+    const stack = new Stack();
+    const instance = createInstance(stack);
+    const hours = createBusinessHours(stack, instance);
+
+    new Queue(stack, 'Queue', {
+      instance,
+      hoursOfOperation: hours,
+      name: 'Support',
+      maxContacts: 0,
+    });
+
+    Template.fromStack(stack).hasResourceProperties('AWS::Connect::Queue', {
+      MaxContacts: 0,
+    });
+  });
+
   test('imports existing queue by ARN', () => {
     const stack = new Stack();
 
@@ -364,6 +438,36 @@ describe('RoutingProfile', () => {
         {
           Delay: 0,
           Priority: 1,
+          QueueReference: {
+            Channel: 'VOICE',
+            QueueArn: Match.anyValue(),
+          },
+        },
+      ],
+    });
+  });
+
+  test('defaults queue config channel to voice', () => {
+    const stack = new Stack();
+    const instance = createInstance(stack);
+    const hours = createBusinessHours(stack, instance);
+    const queue = createQueue(stack, instance, hours);
+
+    new RoutingProfile(stack, 'RoutingProfile', {
+      instance,
+      name: 'Tier 1',
+      description: 'Tier 1 support agents',
+      defaultOutboundQueue: queue,
+      queueConfigs: [
+        { queue, priority: 2, delay: 5 },
+      ],
+    });
+
+    Template.fromStack(stack).hasResourceProperties('AWS::Connect::RoutingProfile', {
+      QueueConfigs: [
+        {
+          Delay: 5,
+          Priority: 2,
           QueueReference: {
             Channel: 'VOICE',
             QueueArn: Match.anyValue(),
@@ -449,6 +553,23 @@ describe('RoutingProfile', () => {
       defaultOutboundQueue: queue,
       mediaConcurrencies: [
         { channel: Channel.VOICE, concurrency: 0 },
+      ],
+    })).toThrow(/media concurrency/);
+  });
+
+  test('rejects non-integer media concurrency', () => {
+    const stack = new Stack();
+    const instance = createInstance(stack);
+    const hours = createBusinessHours(stack, instance);
+    const queue = createQueue(stack, instance, hours);
+
+    expect(() => new RoutingProfile(stack, 'RoutingProfile', {
+      instance,
+      name: 'Tier 1',
+      description: 'Tier 1 support agents',
+      defaultOutboundQueue: queue,
+      mediaConcurrencies: [
+        { channel: Channel.VOICE, concurrency: 1.5 },
       ],
     })).toThrow(/media concurrency/);
   });
@@ -595,6 +716,24 @@ describe('ContactFlow', () => {
       name: 'Broken',
       content: ' ',
     })).toThrow(/content/);
+  });
+
+  test('stringifies non-Error values thrown during JSON validation', () => {
+    const stack = new Stack();
+    const instance = createInstance(stack);
+    const parseSpy = jest.spyOn(JSON, 'parse').mockImplementation(() => {
+      throw 'not-an-error';
+    });
+
+    try {
+      expect(() => new ContactFlow(stack, 'Flow', {
+        instance,
+        name: 'Broken',
+        content: '{}',
+      })).toThrow(/content must be valid JSON: not-an-error/);
+    } finally {
+      parseSpy.mockRestore();
+    }
   });
 });
 
